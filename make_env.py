@@ -9,6 +9,8 @@ from pyroute2.netlink.exceptions import NetlinkError
 
 libc = ctypes.CDLL("libc.so.6", use_errno=True)
 CLONE_NEWNET = 0x40000000
+
+
 def setns(ns_name):
     # open namespace file
     ns_fd = open(f"/var/run/netns/{ns_name}", "r")
@@ -19,11 +21,13 @@ def setns(ns_name):
         raise OSError(ctypes.get_errno(), "Failed to enter namespace")
     ns_fd.close()
 
+
 # load config from file
 def load_config(file_path):
     with open(file_path, "r") as f:
         return json.load(f)
-      
+
+
 # save config to file for cleanup next time
 def save_config(config, file_path):
     with open(file_path, "w") as f:
@@ -38,17 +42,19 @@ def create_namespace(ns_name):
             print(f"Created namespace: {ns_name}")
     except NetlinkError as e:
         print(f"Namespace {ns_name} already exists: {e}")
-        
+
+
 # create bridge
 def create_bridge(bridge_name):
     try:
         with IPDB() as ipdb:
-            bridge = ipdb.create(ifname=bridge_name, kind='bridge')
+            bridge = ipdb.create(ifname=bridge_name, kind="bridge")
             bridge.up().commit()
             print(f"Created bridge: {bridge_name}")
     except Exception as e:
         print(f"Failed to create bridge {bridge_name}: {e}")
         exit(-1)
+
 
 # create veth pairs and connect to bridge
 def create_veth_pairs_and_connect_to_bridge(namespaces, bridge_name):
@@ -62,7 +68,9 @@ def create_veth_pairs_and_connect_to_bridge(namespaces, bridge_name):
 
             try:
                 # create veth pair
-                veth = ipdb.create(ifname=veth_host, kind="veth", peer={"ifname": veth_bridge})
+                veth = ipdb.create(
+                    ifname=veth_host, kind="veth", peer={"ifname": veth_bridge}
+                )
                 veth.commit()
                 print(f"Created veth pair: {veth_host} <-> {veth_bridge}")
             except Exception as e:
@@ -77,7 +85,7 @@ def create_veth_pairs_and_connect_to_bridge(namespaces, bridge_name):
             except Exception as e:
                 print(f"Failed to move {veth_host} to namespace {ns}: {e}")
                 exit(-1)
-            
+
             try:
                 # connect right side of veth pair to bridge
                 ipdb.interfaces[veth_bridge].master = bridge_index
@@ -108,6 +116,7 @@ def configure_interfaces(nodes, ip_addresses):
                     print(
                         f"Configured {link.get_attr('IFLA_IFNAME')} in {ns_name} with IP {ip_addr}"
                     )
+
 
 # list interfaces with IP addresses
 def list_interfaces_with_ip(ns_name):
@@ -141,20 +150,39 @@ def set_tc_rules(nodes, tc_config):
                     # idx = link['index']
                     # try: # FIXME(lqb): pyroute2 kind parameter conflict, so use subprocess
                     #     # 调用 tc() 设置流量控制规则
-                    #     ipr.tc('add', 'root', index=idx, handle='1:', kind='netem', 
+                    #     ipr.tc('add', 'root', index=idx, handle='1:', kind='netem',
                     #            latency=delay_ms, loss=loss_percent)
                     #     print(f"Set TC rules on {link.get_attr('IFLA_IFNAME')} in {ns_name}: {delay_ms} delay, {loss_percent} loss")
                     # except Exception as e:
                     #     print(f"Failed to set TC rules on {link.get_attr('IFLA_IFNAME')} in {ns_name}: {e}")
-                    
+
                     # 因为 pyroute2 不支持设置 netem 规则，所以使用 subprocess 调用 tc 命令
                     interface = link.get_attr("IFLA_IFNAME")
                     try:
                         # 在命名空间中执行 tc 命令
-                        subprocess.run(['ip', 'netns', 'exec', ns_name, 'tc', 'qdisc', 'add', 
-                                        'dev', interface, 'root', 'netem', 
-                                        'delay', delay_ms, 'loss', loss_percent], check=True)
-                        print(f"Applied TC rules on {interface}: delay {delay_ms}, loss {loss_percent}")
+                        subprocess.run(
+                            [
+                                "ip",
+                                "netns",
+                                "exec",
+                                ns_name,
+                                "tc",
+                                "qdisc",
+                                "add",
+                                "dev",
+                                interface,
+                                "root",
+                                "netem",
+                                "delay",
+                                delay_ms,
+                                "loss",
+                                loss_percent,
+                            ],
+                            check=True,
+                        )
+                        print(
+                            f"Applied TC rules on {interface}: delay {delay_ms}, loss {loss_percent}"
+                        )
                     except subprocess.CalledProcessError as e:
                         print(f"Failed to set TC rule on {interface}: {e}")
 
@@ -189,12 +217,14 @@ def cleanup(nodes, bridge_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--clear", action="store_true", help="clear all namespaces and veth pairs")
+    parser.add_argument(
+        "-c", "--clear", action="store_true", help="clear all namespaces and veth pairs"
+    )
     args = parser.parse_args()
     print(args)
-   
+
     config = load_config("./conf/cluster_config.json")
-    
+
     # read old config, for cleanup
     old_config = load_config("./conf/cluster_config_old.json")
 
@@ -205,23 +235,23 @@ if __name__ == "__main__":
         # 1. create namespaces
         for ns_name in config["nodes"]:
             create_namespace(ns_name)
-            
+
         # 2. create bridge
         create_bridge("lqb-bridge")
 
         # 3. create veth pairs and connect to bridge
         create_veth_pairs_and_connect_to_bridge(config["nodes"], "lqb-bridge")
 
-        # 3. assign ip addresses to interfaces
+        # 4. assign ip addresses to interfaces
         configure_interfaces(config["nodes"], config["ip_addresses"])
 
         for ns_name in config["nodes"]:
             print(f"Interfaces in namespace {ns_name}:")
             list_interfaces_with_ip(ns_name)
 
-        # set traffic control rules
+        # 5. set traffic control rules
         set_tc_rules(config["nodes"], config["tc"])
-        
+
         # save current config to file
         save_config(config, "./conf/cluster_config_old.json")
 

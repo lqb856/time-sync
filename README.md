@@ -38,6 +38,8 @@ make_env.py 脚本旨在创建和配置一个虚拟网络环境，模拟多个�
 
 # 2. 如何使用 make_env.py
 
+脚本使用了 `pyroute2`、`json` 等包，请确保你的 python 环境中安装了它们。
+
 ## 1. 编辑 cluster_config.json
 
 - 添加你的节点
