@@ -1,4 +1,4 @@
-# 1. make_env.py 工作原理
+# 1. **make_env.py 工作原理**
 
 > 作者: 黎清兵
 >
@@ -88,9 +88,19 @@ bridge fdb show br [桥接名称]
 ip netns exec <命名空间> ./your_program
 ```
 
-1. 通过 Python 代码运行
+2. 通过 Python 代码运行
 
-# 3. More debuging techniques
+```python
+from make_env import *
+
+setns("node1")  # 切换到 node1 命名空间
+'''
+  your code
+  使用普通套接字编程即可
+'''
+```
+
+# 3. More debugging techniques
 
 ## 1. 检查网络连接和路由
 

@@ -189,7 +189,7 @@ def cleanup(nodes, bridge_name):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("-c", "--clear", type=bool, default=False, help="clear all namespaces and veth pairs")
+    parser.add_argument("-c", "--clear", action="store_true", help="clear all namespaces and veth pairs")
     args = parser.parse_args()
     print(args)
    
