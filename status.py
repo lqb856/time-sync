@@ -5,6 +5,7 @@ Date         : 2024-11-04 14:10:54
 Description  : 
 """
 
+import os
 import time
 from pathlib import Path
 
@@ -34,8 +35,18 @@ class SyncTimeTable:
     def csv_open(self, path):
         """关闭已打开的文件（如果有），并以写模式打开新文件"""
         self.csv_close()
-        self.csv = Path(path).open("w")
-        self.csv_write_header()
+        
+        # 创建文件路径对象
+        file_path = Path(path)
+        
+        # 如果父目录不存在，则递归创建目录
+        file_path.parent.mkdir(parents=True, exist_ok=True)
+        
+        # 创建文件（如果文件不存在）
+        file_path.touch(exist_ok=True)
+        
+        # 打开文件并写入文件头
+        self.csv = file_path.open("w")
 
     def csv_close(self):
         """关闭 CSV 文件（如果已打开）"""

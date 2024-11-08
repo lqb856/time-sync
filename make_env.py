@@ -203,6 +203,8 @@ def cleanup(nodes, bridge_name):
 
         # bridge
         if bridge_name in ipdb.interfaces:
+            # down
+            ipdb.interfaces[bridge_name].down().commit()
             ipdb.interfaces[bridge_name].remove().commit()
             print(f"Deleted bridge: {bridge_name}")
 

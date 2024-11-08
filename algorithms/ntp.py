@@ -8,14 +8,17 @@ Description  :
 import struct
 import time
 import socket
-from ..clock_sync_algorithm import ClockSyncAlgorithm
+from clock_sync_algorithm import ClockSyncAlgorithm
 
 
 class NTPAlgorithm(ClockSyncAlgorithm):
     def __init__(self):
-        super.__init__()
+        super().__init__()
+        
+    def get_name(self):
+        return "NTP"
 
-    def server_process(self, name, sock: socket.socket) -> None:
+    def server_process(self, name, sock: socket.socket, num_client: int = 3) -> None:
         """
         服务器端的 NTP 处理逻辑
         """
@@ -48,7 +51,9 @@ class NTPAlgorithm(ClockSyncAlgorithm):
 
         # 计算时间偏移量和往返时间
         offset = ((t2 - t1) + (t3 - t4)) / 2
-        rtt = (t4 - t1) - (t3 - t2)
+        # 累计时间偏移
+        self.accumulate_offset(offset)
+        rtt = (t4 - t1)
 
         # 更新后的系统时间
         updated_time = t4 + offset

@@ -8,14 +8,17 @@ Description  :
 import struct
 import time
 import socket
-from ..clock_sync_algorithm import ClockSyncAlgorithm
+from clock_sync_algorithm import ClockSyncAlgorithm
 
 
 class CristianAlgorithm(ClockSyncAlgorithm):
     def __init__(self):
-        super.__init__()
+        super().__init__()
+        
+    def get_name(self):
+        return "Cristian"
 
-    def server_process(self, name, sock: socket.socket) -> None:
+    def server_process(self, name, sock: socket.socket, num_client: int = 3) -> None:
         """
         服务器端的 Cristian 处理逻辑
         """
@@ -50,6 +53,8 @@ class CristianAlgorithm(ClockSyncAlgorithm):
 
         # 估算的偏移量和更新时间
         offset = (t2 - t1) + (rtt / 2)
+        # 累计时间偏移
+        self.accumulate_offset(offset)
         updated_time = t4 + offset
         current_system_time = time.time()
         diff = abs(updated_time - current_system_time)
@@ -62,6 +67,7 @@ class CristianAlgorithm(ClockSyncAlgorithm):
         return {
             "t1": t1,
             "t2": t2,
+            "t3": None,
             "t4": t4,
             "offset": offset,
             "rtt": rtt,
