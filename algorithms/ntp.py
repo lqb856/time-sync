@@ -25,7 +25,7 @@ class NTPAlgorithm(ClockSyncAlgorithm):
         # 接收客户端请求数据
         data, addr = sock.recvfrom(1024)
         t2 = time.time()  # 服务器接收到请求的时间戳
-        print(f"{name} received request from {addr}")
+        # print(f"{name} received request from {addr}")
 
         # 构建 NTP 响应，包含 t2 和 t3（发送时间）
         t3 = time.time()  # 服务器发送响应的时间戳
@@ -33,7 +33,7 @@ class NTPAlgorithm(ClockSyncAlgorithm):
 
         # 发送响应
         sock.sendto(response, addr)
-        print(f"{name} sent response to {addr}")
+        # print(f"{name} sent response to {addr}")
 
     def client_process(
         self, name, sock: socket.socket, server_ip: str, server_port: int

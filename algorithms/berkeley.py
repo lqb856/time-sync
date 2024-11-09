@@ -31,7 +31,7 @@ class BerkeleyAlgorithm(ClockSyncAlgorithm):
                 data, addr = sock.recvfrom(1024)
                 client_time = struct.unpack("!d", data)[0]
                 clients_times.append((addr, client_time))
-                print(f"{name} received time from {addr}: {client_time}")
+                # print(f"{name} received time from {addr}: {client_time}")
             except socket.timeout:
                 print(f"{name} timeout waiting for client response")
 
@@ -55,15 +55,15 @@ class BerkeleyAlgorithm(ClockSyncAlgorithm):
 
         coordinator_offset = avg_time - coordinator_time
         self.accumulate_offset_server(coordinator_offset)  # 更新协调者的时间偏移量
-        print(
-            f"{name} calculated offsets for clients and self. Coordinator offset: {coordinator_offset}"
-        )
+        # print(
+        #     f"{name} calculated offsets for clients and self. Coordinator offset: {coordinator_offset}"
+        # )
 
         # 3. 向客户端发送调整值
         for addr, offset in time_offsets.items():
             adjustment = struct.pack("!d", offset)
             sock.sendto(adjustment, addr)
-            print(f"{name} sent offset {offset} to {addr}")
+            # print(f"{name} sent offset {offset} to {addr}")
 
     def client_process(
         self, name, sock: socket.socket, server_ip: str, server_port: int
@@ -80,9 +80,9 @@ class BerkeleyAlgorithm(ClockSyncAlgorithm):
             data, _ = sock.recvfrom(1024)
             adjustment = struct.unpack("!d", data)[0]
             self.accumulate_offset(adjustment)  # 更新客户端的时间偏移量
-            print(
-                f"{name} received adjustment {adjustment}. Updated cumulative offset: {self.cumulative_offset}"
-            )
+            # print(
+            #     f"{name} received adjustment {adjustment}. Updated cumulative offset: {self.cumulative_offset}"
+            # )
         except socket.timeout:
             print(f"{name} did not receive adjustment from coordinator")
 

@@ -25,14 +25,14 @@ class CristianAlgorithm(ClockSyncAlgorithm):
         # 接收客户端请求数据
         data, addr = sock.recvfrom(1024)
         t2 = time.time()  # 服务器接收到请求的时间戳
-        print(f"{name} received request from {addr}")
+        # print(f"{name} received request from {addr}")
 
         # 构建 Cristian 响应，发送当前时间 t2
         response = struct.pack("!d", t2)
 
         # 发送响应
         sock.sendto(response, addr)
-        print(f"{name} sent time to {addr}")
+        # print(f"{name} sent time to {addr}")
 
     def client_process(
         self, name, sock: socket.socket, server_ip: str, server_port: int
@@ -52,10 +52,10 @@ class CristianAlgorithm(ClockSyncAlgorithm):
         rtt = t4 - t1
 
         # 估算的偏移量和更新时间
-        offset = (t2 - t1) + (rtt / 2)
+        offset = rtt / 2
         # 累计时间偏移
-        self.accumulate_offset(offset)
-        updated_time = t4 + offset
+        # self.accumulate_offset(offset)
+        updated_time = t2 + offset
         current_system_time = time.time()
         diff = abs(updated_time - current_system_time)
 
